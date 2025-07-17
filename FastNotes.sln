@@ -1,0 +1,23 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+#
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastNotes.Api", "FastNotes.Api\FastNotes.Api.csproj", "{CBC2D849-1E1F-4467-BA51-5EB131A207E6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastNotes.Shared", "FastNotes.Shared\FastNotes.Shared.csproj", "{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CBC2D849-1E1F-4467-BA51-5EB131A207E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CBC2D849-1E1F-4467-BA51-5EB131A207E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CBC2D849-1E1F-4467-BA51-5EB131A207E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CBC2D849-1E1F-4467-BA51-5EB131A207E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

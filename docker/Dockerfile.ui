@@ -1,0 +1,14 @@
+# Сборка React-приложения
+FROM node:20 AS build
+WORKDIR /app
+
+COPY fastnotes-ui/package*.json ./
+RUN npm install
+
+COPY fastnotes-ui ./
+RUN npm run build
+
+# Сервер для статики (например, nginx)
+FROM nginx:alpine
+COPY --from=build /app/dist /usr/share/nginx/html
+EXPOSE 80

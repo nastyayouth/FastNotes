@@ -1,0 +1,99 @@
+# Rider
+.idea/
+*.sln.iml
+
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+bld/
+[Bb]in/
+[Oo]bj/
+*.dll
+*.exe
+*.app
+*.log
+
+# NuGet packages
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+# For .NET Core
+*.deps.json
+
+# dotCover
+*.dotCover
+
+# Visual Studio
+.vs/
+.vscode/
+
+# Rider
+.idea/
+*.sln.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Test results
+TestResults/
+*.TestResults
+*.trx
+*.coverage
+*.coveragexml
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Logs and crash dumps
+*.log
+*.bak
+*.orig
+*.tmp
+*.mdmp
+
+# Local env configs
+.env
+.env.*
+
+# Global.json SDK resolver cache
+.global.json.sentinel
+
+# Others
+*.cache
+*.db
+*.pid
+*.pid.lock
+
+# JetBrains caches
+.idea/
+.idea_modules/
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf/
+.idea/httpRequests/
+
+# dotnet user secrets
+**/secrets.json
+
+# Rider local run configs
+.idea/runConfigurations/
+
+# System-wide Rider cache
+~$*
