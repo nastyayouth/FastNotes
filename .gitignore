@@ -78,6 +78,9 @@ _ReSharper*/
 *.db
 *.pid
 *.pid.lock
+**/launchSettings.json
+**/appsettings.Development.json
+*.http
 
 # JetBrains caches
 .idea/
