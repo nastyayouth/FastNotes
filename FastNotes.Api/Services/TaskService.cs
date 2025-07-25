@@ -46,4 +46,23 @@ public class TaskService : ITaskService
         task.Id = entity.Id;
         return task;
     }
+
+    public async Task<List<TaskDto>> GetTodayAsync()
+    {
+        var today = DateTime.Today;
+
+        var tasks = await _context.Tasks
+            .Where(t => t.DueDate.Date == today)
+            .ToListAsync();
+
+        return tasks.Select(t => new TaskDto()
+        {
+            Id = t.Id,
+            Title = t.Title,
+            Description = t.Description,
+            AssignedTo = t.AssignedTo,
+            DueDate = t.DueDate,
+            IsConfirmed = t.IsConfirmed
+        }).ToList();
+    }
 }

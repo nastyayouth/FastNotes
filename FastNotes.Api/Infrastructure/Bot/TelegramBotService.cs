@@ -99,23 +99,39 @@ public class TelegramBotService
                 break;
 
             case "/list":
-                // TODO: Получить все задачи из TaskService
+            {
+                using var scope = _services.CreateScope();
+                var taskService = scope.ServiceProvider.GetRequiredService<TaskService>();
+                var tasks = await taskService.GetAllAsync();
+
+                var messageText = tasks.Any()
+                    ? string.Join("\n\n", tasks.Select(t =>
+                        $"{t.Title}\n До:{t.DueDate:d}"))
+                    : "Пока нет задач.";
                 await bot.SendTextMessageAsync(
                     chatId: message.Chat.Id,
-                    text: "Здесь будет список задач.",
+                    text: messageText,
                     cancellationToken: token
                 );
                 break;
-
+            }
             case "/today":
-                // TODO: Получить задачи на сегодня
+            {
+                using var scope = _services.CreateScope();
+                var taskService = scope.ServiceProvider.GetRequiredService<TaskService>();
+                var tasks = await taskService.GetTodayAsync();
+
+                var messageText = tasks.Any()
+                    ? string.Join("\n\n", tasks.Select(t =>
+                        $"{t.Title}\n До:{t.DueDate:d}"))
+                    : "На сегодня нет задач.";
                 await bot.SendTextMessageAsync(
                     chatId: message.Chat.Id,
-                    text: "Сегодняшние задачи пока не реализованы.",
+                    text: messageText,
                     cancellationToken: token
                 );
                 break;
-
+            }
             default:
                 await bot.SendTextMessageAsync(
                     chatId: message.Chat.Id,
