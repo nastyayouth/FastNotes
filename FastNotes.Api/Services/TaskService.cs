@@ -52,7 +52,7 @@ public class TaskService : ITaskService
         var today = DateTime.Today;
 
         var tasks = await _context.Tasks
-            .Where(t => t.DueDate.Date == today)
+            .Where(t => t.DueDate.Value== today)
             .ToListAsync();
 
         return tasks.Select(t => new TaskDto()

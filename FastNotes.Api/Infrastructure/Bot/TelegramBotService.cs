@@ -1,11 +1,14 @@
 using FastNotes.Api.Infrastructure.Config;
 using FastNotes.Api.Infrastructure.Whisper;
+using FastNotes.Api.Models;
 using FastNotes.Api.Services;
+using FastNotes.Shared;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Microsoft.Extensions.Options;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace FastNotes.Api.Infrastructure.Bot;
 
@@ -37,6 +40,10 @@ public class TelegramBotService
 
     private async Task HandleUpdateAsync(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
+        if (update.Type == UpdateType.CallbackQuery)
+        {
+            await HandleCallbackAsync(bot, update.CallbackQuery, cancellationToken);
+        }
         if (update.Type != UpdateType.Message || update.Message?.Voice == null)
             return;
 
@@ -68,14 +75,37 @@ public class TelegramBotService
 
         var whisper = scope.ServiceProvider.GetRequiredService<WhisperService>();
         var recognizedText = await whisper.TranscribeAsync(stream);
-        
 
-        var task = await taskProcessor.CreateTaskFromTextAsync(recognizedText,
-            message.Chat.Username ?? "telegram-user");
+        var (title, dueDate) = VoiceParser.Parse(recognizedText);
+        // Сохраняем черновик
+        var drafts = scope.ServiceProvider.GetRequiredService<DraftService>();
+
+        var draft = new TaskDraft
+        {
+            ChatId = message.Chat.Id,
+            RawText = recognizedText,
+            Title = title,
+            DueDate = dueDate
+        };
+        drafts.SaveDraft(draft);
+
+        var responseText =
+            $"Черновик задачи:\n" +
+            $" Название: {draft.Title}\n" +
+            $" Срок: {(draft.DueDate.HasValue ? draft.DueDate.Value.ToString("f") : "не указан")}\n\n" +
+            $"Изменить или сохранить?";
 
         await bot.SendTextMessageAsync(
             message.Chat.Id,
-            $"Задача сохранена: {task.Title}",
+            responseText,
+            replyMarkup: new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("✅ Оставить как есть", "confirm_draft"),
+                    InlineKeyboardButton.WithCallbackData("✏️ Изменить", "edit_draft")
+                }
+            }),
             cancellationToken: cancellationToken
         );
     }
@@ -139,6 +169,33 @@ public class TelegramBotService
                     cancellationToken: token
                 );
                 break;
+        }
+    }
+    private async Task HandleCallbackAsync(ITelegramBotClient bot, CallbackQuery callback, CancellationToken token)
+    {
+        using var scope = _services.CreateScope();
+        var drafts = scope.ServiceProvider.GetRequiredService<DraftService>();
+        var draft = drafts.GetDraft(callback.Message.Chat.Id);
+
+        if (callback.Data == "confirm_draft" && draft != null)
+        {
+            var taskService = scope.ServiceProvider.GetRequiredService<TaskService>();
+            await taskService.CreateAsync(new TaskDto()
+            {
+                Title =  draft.Title,
+                Description = draft.RawText,
+                AssignedTo = null,
+                DueDate =  draft.DueDate,
+                IsConfirmed = true
+            });
+            drafts.RemoveDraft(draft.ChatId);
+
+            await bot.SendTextMessageAsync(callback.Message.Chat.Id, "Задача сохранена", cancellationToken: token);
+        }
+        else if (callback.Data == "edit_draft")
+        {
+            await bot.SendTextMessageAsync(callback.Message.Chat.Id, 
+                "Задача сохранена и доступна в /list", cancellationToken: token);
         }
     }
 
