@@ -1,8 +1,6 @@
-using FastNotes.Api.Models;
+using FastNotes.Api.Services;
+using FastNotes.Shared;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using FastNotes.Api.Data;
-
 
 namespace FastNotes.Api.Controllers;
 
@@ -10,19 +8,24 @@ namespace FastNotes.Api.Controllers;
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
-    private readonly AppDbContext _db;
+    private readonly ITaskService _service;
 
-    public TasksController(AppDbContext db) => _db = db;
+    public TasksController(ITaskService service)
+    {
+        _service = service;
+    }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll() =>
-        Ok(await _db.Tasks.ToListAsync());
+    public async Task<IActionResult> GetAll()
+    {
+        var tasks = await _service.GetAllAsync();
+        return Ok(tasks);
+    }
 
     [HttpPost]
-    public async Task<IActionResult> Create(TaskItem task)
+    public async Task<IActionResult> Create(TaskDto task)
     {
-        _db.Tasks.Add(task);
-        await _db.SaveChangesAsync();
-        return CreatedAtAction(nameof(GetAll), new { id = task.Id }, task);
+        var created = await _service.CreateAsync(task);
+        return CreatedAtAction(nameof(GetAll), new { id = created.Id }, created);
     }
 }

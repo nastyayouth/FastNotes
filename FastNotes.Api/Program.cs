@@ -1,23 +1,39 @@
 using FastNotes.Api.Data;
+using FastNotes.Api.Infrastructure;
+using FastNotes.Api.Services;
+using FastNotes.Shared;
 using Microsoft.EntityFrameworkCore;
+using FastNotes.Api.Infrastructure.Config;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// PostgreSQL
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    var config = sp.GetRequiredService<IOptions<DatabaseSettings>>().Value;
+    options.UseNpgsql(config.ConnectionString);
+});
+builder.Services.Configure<DatabaseSettings>(
+    builder.Configuration.GetSection("DatabaseSettings"));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddSingleton<TelegramBotService>();
+
+builder.Services.AddScoped<TelegramTaskProcessor>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+
 var app = builder.Build();
 
-// Swagger (удобно на старте)
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
+
+var bot = app.Services.GetRequiredService<TelegramBotService>();
+bot.Start();
 app.Run();
