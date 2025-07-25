@@ -1,4 +1,5 @@
 using FastNotes.Api.Infrastructure.Config;
+using FastNotes.Api.Infrastructure.Whisper;
 using FastNotes.Api.Services;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
@@ -40,7 +41,19 @@ public class TelegramBotService
             return;
 
         var message = update.Message;
+        if (message.Voice != null)
+        {
+            await HandleVoiceMessageAsync(bot, update,cancellationToken);
+        }
+        else if (message.Text != null && message.Text.StartsWith("/"))
+        {
+            await HandleCommandAsync(bot, message, cancellationToken);
+        }
+    }
 
+    private async Task HandleVoiceMessageAsync(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
+    {
+        var message = update.Message;
         var file = await bot.GetFileAsync(message.Voice.FileId, cancellationToken);
         var stream = new MemoryStream();
         var url = $"https://api.telegram.org/file/bot{_token}/{file.FilePath}";
@@ -53,7 +66,8 @@ public class TelegramBotService
         using var scope = _services.CreateScope();
         var taskProcessor = scope.ServiceProvider.GetRequiredService<TelegramTaskProcessor>();
 
-        string recognizedText = "[распознанный текст из голосового]";
+        var whisper = scope.ServiceProvider.GetRequiredService<WhisperService>();
+        var recognizedText = await whisper.TranscribeAsync(stream);
         
 
         var task = await taskProcessor.CreateTaskFromTextAsync(recognizedText,
@@ -61,14 +75,60 @@ public class TelegramBotService
 
         await bot.SendTextMessageAsync(
             message.Chat.Id,
-            $"✅ Задача сохранена: {task.Title}",
+            $"Задача сохранена: {task.Title}",
             cancellationToken: cancellationToken
         );
     }
 
+    private async Task HandleCommandAsync(ITelegramBotClient bot, Message message, CancellationToken token)
+    {
+        var command = message.Text!.Trim().ToLower();
+
+        switch (command)
+        {
+            case "/start":
+            case "/help":
+                await bot.SendTextMessageAsync(
+                    chatId: message.Chat.Id,
+                    text: " Доступные команды:\n" +
+                          "/list – показать все задачи\n" +
+                          "/today – задачи на сегодня\n" +
+                          "/help – справка",
+                    cancellationToken: token
+                );
+                break;
+
+            case "/list":
+                // TODO: Получить все задачи из TaskService
+                await bot.SendTextMessageAsync(
+                    chatId: message.Chat.Id,
+                    text: "Здесь будет список задач.",
+                    cancellationToken: token
+                );
+                break;
+
+            case "/today":
+                // TODO: Получить задачи на сегодня
+                await bot.SendTextMessageAsync(
+                    chatId: message.Chat.Id,
+                    text: "Сегодняшние задачи пока не реализованы.",
+                    cancellationToken: token
+                );
+                break;
+
+            default:
+                await bot.SendTextMessageAsync(
+                    chatId: message.Chat.Id,
+                    text: " Неизвестная команда. Напиши /help",
+                    cancellationToken: token
+                );
+                break;
+        }
+    }
+
     private Task HandleErrorAsync(ITelegramBotClient bot, Exception exception, CancellationToken token)
     {
-        Console.WriteLine($"❌ Telegram error: {exception.Message}");
+        Console.WriteLine($"Telegram error: {exception.Message}");
         return Task.CompletedTask;
     }
 }
