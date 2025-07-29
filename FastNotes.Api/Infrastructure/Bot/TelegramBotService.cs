@@ -61,34 +61,58 @@ public class TelegramBotService
     private async Task HandleVoiceMessageAsync(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
         var message = update.Message;
-        var file = await bot.GetFileAsync(message.Voice.FileId, cancellationToken);
+
+        var stream = await DownloadVoiceStreamAsync(bot, message.Voice.FileId, cancellationToken);
+        using var scope = _services.CreateScope();
+        var recognizedText = await TranscribeVoiceAsync(scope, stream);
+        var draft = ParseToDraft(message.Chat.Id, recognizedText);
+        SaveDraft(scope, draft);
+
+        await SendDraftPreviewAsync(bot, message.Chat.Id, draft, cancellationToken);
+    }
+
+    private async Task<Stream> DownloadVoiceStreamAsync(ITelegramBotClient bot, string fileId, CancellationToken token)
+    {
+        var file = await bot.GetFileAsync(fileId, token);
         var stream = new MemoryStream();
         var url = $"https://api.telegram.org/file/bot{_token}/{file.FilePath}";
 
         using var http = new HttpClient();
-        using var voiceStream = await http.GetStreamAsync(url, cancellationToken);
-        await voiceStream.CopyToAsync(stream, cancellationToken);
+        using var voiceStream = await http.GetStreamAsync(url, token);
+        await voiceStream.CopyToAsync(stream, token);
         stream.Position = 0;
 
-        using var scope = _services.CreateScope();
-        var taskProcessor = scope.ServiceProvider.GetRequiredService<TelegramTaskProcessor>();
+        return stream;
+    }
 
+    private async Task<string> TranscribeVoiceAsync(IServiceScope scope, Stream stream)
+    {
         var whisper = scope.ServiceProvider.GetRequiredService<WhisperService>();
-        var recognizedText = await whisper.TranscribeAsync(stream);
-
-        var (title, dueDate) = VoiceParser.Parse(recognizedText);
-        // Сохраняем черновик
-        var drafts = scope.ServiceProvider.GetRequiredService<DraftService>();
-
-        var draft = new TaskDraft
+        return await whisper.TranscribeAsync(stream);
+    }
+    
+    private  TaskDraft ParseToDraft(long chatId, string text)
+    {
+        var (title, dueDate, assignedTo) = VoiceParser.Parse(text);
+        return  new TaskDraft
         {
-            ChatId = message.Chat.Id,
-            RawText = recognizedText,
+            ChatId = chatId,
+            RawText = text,
             Title = title,
-            DueDate = dueDate
+            DueDate = dueDate,
+            AssignedTo = assignedTo
         };
-        drafts.SaveDraft(draft);
+    }
 
+    private void SaveDraft(IServiceScope scope, TaskDraft draft)
+    {
+        var drafts = scope.ServiceProvider.GetRequiredService<DraftService>();
+        drafts.SaveDraft(draft);
+    }
+
+    private async Task SendDraftPreviewAsync(
+        ITelegramBotClient bot, long chatId, TaskDraft draft, CancellationToken token)
+    {
         var responseText =
             $"Черновик задачи:\n" +
             $" Название: {draft.Title}\n" +
@@ -96,7 +120,7 @@ public class TelegramBotService
             $"Изменить или сохранить?";
 
         await bot.SendTextMessageAsync(
-            message.Chat.Id,
+            chatId,
             responseText,
             replyMarkup: new InlineKeyboardMarkup(new[]
             {
@@ -106,7 +130,7 @@ public class TelegramBotService
                     InlineKeyboardButton.WithCallbackData("✏️ Изменить", "edit_draft")
                 }
             }),
-            cancellationToken: cancellationToken
+            cancellationToken: token
         );
     }
 
