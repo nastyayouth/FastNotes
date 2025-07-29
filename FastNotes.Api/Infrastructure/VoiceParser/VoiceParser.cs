@@ -10,11 +10,12 @@ public static class VoiceParser
         "в понедельник", "во вторник", "в среду", "в четверг", "в пятницу", "в субботу", "в воскресенье"
     };
 
-    public static (string title, DateTime? dueDate) Parse(string input)
+    public static (string title, DateTime? dueDate, string? assignedTo) Parse(string input)
     {
         var lowered = input.ToLower();
         DateTime now = DateTime.Now;
         DateTime? dueDate = null;
+        string? assignedTo = null;
 
         //  Ключевые слова
         if (lowered.Contains("сегодня"))
@@ -74,7 +75,24 @@ public static class VoiceParser
         if (string.IsNullOrWhiteSpace(title))
             title = string.Join(" ", lowered.Split(" ").Take(3));
 
-        return (CultureInfo.CurrentCulture.TextInfo.ToTitleCase(title), dueDate);
+
+        // 1. "для Анны", "для Пети"
+        var matchFor = Regex.Match(lowered, @"для\s([а-яА-Яa-zA-ZёЁ]+)");
+        if (matchFor.Success)
+            assignedTo = Capitalize(matchFor.Groups[1].Value);
+
+        // 2. "— Петя", " - Анна"
+        var matchDash = Regex.Match(input, @"[-—–]\s*([а-яА-Яa-zA-ZёЁ]+)$");
+        if (matchDash.Success)
+            assignedTo = Capitalize(matchDash.Groups[1].Value);
+
+        // 3. "исполнитель: Анна", "ответственный: Максим"
+        var matchExplicit = Regex.Match(lowered, @"(исполнитель|ответственный):\s*([а-яА-Яa-zA-ZёЁ]+)");
+        if (matchExplicit.Success)
+            assignedTo = Capitalize(matchExplicit.Groups[2].Value);
+
+
+        return (title, dueDate, assignedTo);
     }
 
     private static DayOfWeek? ParseDayOfWeek(string phrase)
@@ -98,5 +116,10 @@ public static class VoiceParser
         while (date.DayOfWeek != day)
             date = date.AddDays(1);
         return date;
+    }
+
+    private static string Capitalize(string value)
+    {
+        return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(value.Trim());
     }
 };

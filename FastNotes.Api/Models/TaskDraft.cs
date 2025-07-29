@@ -7,4 +7,5 @@ public class TaskDraft
     public string Title { get; set; }
     public DateTime? DueDate { get; set; }
     public bool isConfirmed { get; set; } = false;
+    public string AssignedTo { get; set; }
 }
