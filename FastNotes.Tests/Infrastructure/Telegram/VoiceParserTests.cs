@@ -79,6 +79,14 @@ public class VoiceParserTests
         var (_, _, assignedTo) = VoiceParser.Parse(input);
         Assert.Equal("Анна", assignedTo);
     }
+    
+    [Fact(DisplayName = "Парсинг запятой при обращении")]
+    public void Parse_AssignedComma()
+    {
+        var input = "Забронировать билеты, Анна";
+        var (_, _, assignedTo) = VoiceParser.Parse(input);
+        Assert.Equal("Анна", assignedTo);
+    }
 
     [Fact(DisplayName = "Парсинг исполнителя через ключевое слово")]
     public void Parse_AssignedExplicit()

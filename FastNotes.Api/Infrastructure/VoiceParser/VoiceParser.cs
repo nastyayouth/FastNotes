@@ -85,6 +85,9 @@ public static class VoiceParser
         var matchDash = Regex.Match(input, @"[-—–]\s*([а-яА-Яa-zA-ZёЁ]+)$");
         if (matchDash.Success)
             assignedTo = Capitalize(matchDash.Groups[1].Value);
+        var matchComma = Regex.Match(input, @",\s*([а-яА-Яa-zA-ZёЁ]+)$");
+        if (matchComma.Success)
+            assignedTo = Capitalize(matchComma.Groups[1].Value);
 
         // 3. "исполнитель: Анна", "ответственный: Максим"
         var matchExplicit = Regex.Match(lowered, @"(исполнитель|ответственный):\s*([а-яА-Яa-zA-ZёЁ]+)");
