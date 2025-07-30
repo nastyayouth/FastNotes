@@ -2,6 +2,7 @@ namespace FastNotes.Api.Models;
 
 public class TaskDraft
 {
+    public Guid Id{ get; set; }
     public long ChatId { get; set; }
     public string RawText { get; set; }
     public string Title { get; set; }

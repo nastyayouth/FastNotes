@@ -12,4 +12,7 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<TaskItem> Tasks => Set<TaskItem>();
+    public DbSet<TaskDraft> TaskDrafts => Set<TaskDraft>();
+    
+    
 }

@@ -44,6 +44,19 @@ public class TelegramBotService
         {
             await HandleCallbackAsync(bot, update.CallbackQuery, cancellationToken);
         }
+        if (update.Type == UpdateType.Message && update.Message?.Text != null)
+        {
+            using var scope = _services.CreateScope();
+            var editStateService = scope.ServiceProvider.GetRequiredService<EditStateService>();
+            var session = editStateService.GetState(update.Message.Chat.Id);
+
+            if (session is { Field: not EditField.None })
+            {
+                await HandleEditResponseAsync(update.Message, session.Field, session.DraftId, scope);
+                editStateService.ClearState(update.Message.Chat.Id);
+                return;
+            }
+        }
         if (update.Type != UpdateType.Message || update.Message?.Voice == null)
             return;
 
@@ -96,6 +109,7 @@ public class TelegramBotService
         var (title, dueDate, assignedTo) = VoiceParser.Parse(text);
         return  new TaskDraft
         {
+            Id = Guid.NewGuid(),
             ChatId = chatId,
             RawText = text,
             Title = title,
@@ -117,6 +131,7 @@ public class TelegramBotService
             $"Черновик задачи:\n" +
             $" Название: {draft.Title}\n" +
             $" Срок: {(draft.DueDate.HasValue ? draft.DueDate.Value.ToString("f") : "не указан")}\n\n" +
+            $"Исполнитель: {draft.AssignedTo ?? "не указан"}\n" +
             $"Изменить или сохранить?";
 
         await bot.SendTextMessageAsync(
@@ -127,7 +142,7 @@ public class TelegramBotService
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("✅ Оставить как есть", "confirm_draft"),
-                    InlineKeyboardButton.WithCallbackData("✏️ Изменить", "edit_draft")
+                    InlineKeyboardButton.WithCallbackData("✏️ Изменить", $"edit_draft:{draft.Id}")
                 }
             }),
             cancellationToken: token
@@ -201,14 +216,14 @@ public class TelegramBotService
         var drafts = scope.ServiceProvider.GetRequiredService<DraftService>();
         var draft = drafts.GetDraft(callback.Message.Chat.Id);
 
-        if (callback.Data == "confirm_draft" && draft != null)
+        if (callback.Data.StartsWith("confirm_draft"))
         {
             var taskService = scope.ServiceProvider.GetRequiredService<TaskService>();
             await taskService.CreateAsync(new TaskDto()
             {
                 Title =  draft.Title,
                 Description = draft.RawText,
-                AssignedTo = null,
+                AssignedTo = draft.AssignedTo ?? "не указан",
                 DueDate =  draft.DueDate,
                 IsConfirmed = true
             });
@@ -216,12 +231,119 @@ public class TelegramBotService
 
             await bot.SendTextMessageAsync(callback.Message.Chat.Id, "Задача сохранена", cancellationToken: token);
         }
-        else if (callback.Data == "edit_draft")
+        else if (callback.Data.StartsWith("edit_draft:"))
         {
-            await bot.SendTextMessageAsync(callback.Message.Chat.Id, 
-                "Задача сохранена и доступна в /list", cancellationToken: token);
+            var parts = callback.Data.Split(':');
+            if (parts.Length == 2 && Guid.TryParse(parts[1], out var draftId))
+            {
+                var editService = scope.ServiceProvider.GetRequiredService<EditStateService>();
+                editService.SetState(callback.Message.Chat.Id, EditField.None, draftId); // Пока поле неизвестно
+
+                await bot.SendTextMessageAsync(
+                    callback.Message.Chat.Id,
+                    "Что хотите изменить?",
+                    replyMarkup: new InlineKeyboardMarkup(new[]
+                    {
+                        new[] { InlineKeyboardButton.WithCallbackData("✏️ Название", $"edit_title:{draftId}") },
+                        new[] { InlineKeyboardButton.WithCallbackData("📅 Срок", $"edit_due:{draftId}") },
+                        new[] { InlineKeyboardButton.WithCallbackData("👤 Исполнитель", $"edit_assigned:{draftId}") },
+                    }),
+                    cancellationToken: token
+                );
+                return;
+            }
         }
+        else if (callback.Data.StartsWith("edit_"))
+        {
+            var parts = callback.Data.Split(':');
+            if (parts.Length == 2 && Guid.TryParse(parts[1], out var draftId))
+            {
+                var editService = scope.ServiceProvider.GetRequiredService<EditStateService>();
+
+                var field = parts[0] switch
+                {
+                    "edit_title" => EditField.Title,
+                    "edit_due" => EditField.DueDate,
+                    "edit_assigned" => EditField.AssignedTo,
+                    _ => EditField.None
+                };
+
+                editService.SetState(callback.Message.Chat.Id, field, draftId);
+
+                var prompt = field switch
+                {
+                    EditField.Title => "Введите новое название задачи:",
+                    EditField.DueDate => "Введите новую дату и время (например, 2025-08-01 14:00):",
+                    EditField.AssignedTo => "Введите нового исполнителя:",
+                    _ => "Введите значение:"
+                };
+
+                await bot.SendTextMessageAsync(callback.Message.Chat.Id, prompt, cancellationToken: token);
+                return;
+            }
+        }
+
     }
+    
+    private async Task HandleEditResponseAsync(Message message, EditField field, Guid draftId, IServiceScope scope)
+    {
+        var drafts = scope.ServiceProvider.GetRequiredService<DraftService>();
+        var editStateService = scope.ServiceProvider.GetRequiredService<EditStateService>();
+        var session = editStateService.GetState(message.Chat.Id);
+
+        if (session == null)
+        {
+            await _botClient.SendTextMessageAsync(message.Chat.Id, "Состояние редактирования не найдено.");
+            return;
+        }
+
+        var draft = drafts.GetDraftById(session.DraftId); // Добавим этот метод ниже
+        if (draft == null)
+        {
+            await _botClient.SendTextMessageAsync(message.Chat.Id, "Черновик не найден.");
+            return;
+        }
+
+        switch (field)
+        {
+            case EditField.Title:
+                draft.Title = message.Text!;
+                break;
+            case EditField.DueDate:
+                if (DateTime.TryParse(message.Text, out var dueDate))
+                    draft.DueDate = dueDate;
+                else
+                {
+                    await _botClient.SendTextMessageAsync(message.Chat.Id, "Неверный формат даты. Пример: 2025-08-01 14:00");
+                    return;
+                }
+                break;
+            case EditField.AssignedTo:
+                draft.AssignedTo = message.Text!;
+                break;
+        }
+
+        drafts.SaveDraft(draft);
+
+        await _botClient.SendTextMessageAsync(
+            message.Chat.Id,
+            "Поле обновлено. Черновик:\n" +
+            $"Название: {draft.Title}\n" +
+            $"Срок: {(draft.DueDate.HasValue ? draft.DueDate.Value.ToString("f") : "не указан")}\n" +
+            $"Исполнитель: {draft.AssignedTo ?? "не указан"}\n\n" +
+            "Изменить что-то ещё или сохранить?",
+            replyMarkup: new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData("✅ Сохранить", $"confirm_draft:{draft.Id}"),
+                    InlineKeyboardButton.WithCallbackData("✏️ Изменить название", $"edit_title:{draft.Id}"),
+                    InlineKeyboardButton.WithCallbackData("📅 Изменить срок", $"edit_due:{draft.Id}"),
+                    InlineKeyboardButton.WithCallbackData("👤 Изменить исполнителя", $"edit_assigned:{draft.Id}")
+                }
+            }));
+    }
+
 
     private Task HandleErrorAsync(ITelegramBotClient bot, Exception exception, CancellationToken token)
     {

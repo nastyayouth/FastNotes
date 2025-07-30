@@ -5,20 +5,32 @@ namespace FastNotes.Api.Services;
 
 public class DraftService
 {
-    private readonly Dictionary<long, TaskDraft> _drafts = new();
+    private readonly Dictionary<Guid, TaskDraft> _drafts = new();
 
     public void SaveDraft(TaskDraft draft)
     {
-        _drafts[draft.ChatId] = draft;
+        _drafts[draft.Id] = draft;
+    }
+
+    public TaskDraft? GetDraftById(Guid id)
+    {
+        return _drafts.TryGetValue(id, out var draft) ? draft : null;
     }
 
     public TaskDraft? GetDraft(long chatId)
     {
-        return _drafts.TryGetValue(chatId, out var draft) ? draft : null;
+        return _drafts.Values.FirstOrDefault(d => d.ChatId == chatId);
     }
 
     public void RemoveDraft(long chatId)
     {
-        _drafts.Remove(chatId);
+        var draft = GetDraft(chatId);
+        if (draft != null)
+            _drafts.Remove(draft.Id);
+    }
+
+    public void RemoveDraft(Guid draftId)
+    {
+        _drafts.Remove(draftId);
     }
 }

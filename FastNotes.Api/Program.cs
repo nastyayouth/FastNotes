@@ -27,11 +27,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<TelegramBotService>();
+builder.Services.AddSingleton<DraftService>();
+builder.Services.AddSingleton<EditStateService>();
 
 builder.Services.AddScoped<TelegramTaskProcessor>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<WhisperService>();
-builder.Services.AddSingleton<DraftService>();
+builder.Services.AddScoped<TaskService>();
+
+
+
 
 var app = builder.Build();
 
