@@ -9,3 +9,7 @@
 - React + Vite + Tailwind
 - Telegram.Bot API v22
 - Whisper (распознавание речи)
+
+## CI
+
+В проекте настроен CI на базе GitHub Actions, который собирает и тестирует бэкенд на .NET и фронтенд на Node.js.
