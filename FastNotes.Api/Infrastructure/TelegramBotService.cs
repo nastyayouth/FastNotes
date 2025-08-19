@@ -15,10 +15,10 @@ public class TelegramBotService
     private readonly IServiceProvider _services;
     private readonly string _token;
 
-    public TelegramBotService(IOptions<DatabaseSettings> options, IServiceProvider services)
+    public TelegramBotService(IOptions<TelegramSettings> options, IServiceProvider services)
     {
         _services = services;
-        _token = options.Value.ProtectionKeysConnectionString;
+        _token = options.Value.BotToken;
         _botClient = new TelegramBotClient(_token);
     }
 
@@ -55,7 +55,7 @@ public class TelegramBotService
         var taskProcessor = scope.ServiceProvider.GetRequiredService<TelegramTaskProcessor>();
 
         string recognizedText = "[распознанный текст из голосового]";
-        
+
 
         var task = await taskProcessor.CreateTaskFromTextAsync(recognizedText,
             message.Chat.Username ?? "telegram-user");

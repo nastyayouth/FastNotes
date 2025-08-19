@@ -9,3 +9,18 @@
 - React + Vite + Tailwind
 - Telegram.Bot API v22
 - Whisper (распознавание речи)
+
+## Конфигурация
+
+Токен телеграм-бота следует передавать через `appsettings.Development.json` или переменные среды.
+Пример секции конфигурации:
+
+```json
+{
+  "TelegramSettings": {
+    "BotToken": "<токен>"
+  }
+}
+```
+
+Для переменной среды используйте ключ `TelegramSettings__BotToken`.

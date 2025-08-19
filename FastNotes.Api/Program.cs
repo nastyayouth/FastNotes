@@ -16,6 +16,8 @@ builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 });
 builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection("DatabaseSettings"));
+builder.Services.Configure<TelegramSettings>(
+    builder.Configuration.GetSection("TelegramSettings"));
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
