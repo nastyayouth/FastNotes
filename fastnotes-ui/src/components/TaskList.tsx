@@ -6,15 +6,25 @@ import type { TaskDto } from '../api/tasks';
 export const TaskList = () => {
     const [tasks, setTasks] = useState<TaskDto[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        getTasks().then(data => {
-            setTasks(data);
-            setLoading(false);
-        });
+        const fetchTasks = async () => {
+            try {
+                const data = await getTasks();
+                setTasks(data);
+            } catch (err: any) {
+                setError(err?.message || 'Не удалось загрузить задачи');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTasks();
     }, []);
 
     if (loading) return <p className="text-gray-500">Загрузка...</p>;
+    if (error) return <p className="text-red-500">{error}</p>;
 
     return (
         <div className="p-4">
