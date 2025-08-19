@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastNotes.Api", "FastNotes.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastNotes.Shared", "FastNotes.Shared\FastNotes.Shared.csproj", "{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FastNotes.Api.Tests", "FastNotes.Api.Tests\FastNotes.Api.Tests.csproj", "{7D8291E8-1111-4BEF-B0B1-1E2DA5D8A3F2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,7 +19,11 @@ Global
 		{CBC2D849-1E1F-4467-BA51-5EB131A207E6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
+                {3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                {3F5B8584-441B-4D75-95E0-3A9A5F9BE009}.Release|Any CPU.Build.0 = Release|Any CPU
+                {7D8291E8-1111-4BEF-B0B1-1E2DA5D8A3F2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+                {7D8291E8-1111-4BEF-B0B1-1E2DA5D8A3F2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+                {7D8291E8-1111-4BEF-B0B1-1E2DA5D8A3F2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+                {7D8291E8-1111-4BEF-B0B1-1E2DA5D8A3F2}.Release|Any CPU.Build.0 = Release|Any CPU
+        EndGlobalSection
 EndGlobal
