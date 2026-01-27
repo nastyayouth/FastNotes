@@ -81,6 +81,7 @@ _ReSharper*/
 **/launchSettings.json
 **/appsettings.Development.json
 *.http
+node_modules/
 
 # JetBrains caches
 .idea/
