@@ -43,7 +43,7 @@ public class TelegramBotService
             cancellationToken: cts.Token
         );
 
-        Console.WriteLine("TelegramBot запущен");
+        Console.WriteLine("TelegramBot started");
     }
 
     private async Task HandleUpdateAsync(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
@@ -136,11 +136,11 @@ public class TelegramBotService
         ITelegramBotClient bot, long chatId, TaskDraft draft, CancellationToken token)
     {
         var responseText =
-            $"Черновик задачи:\n" +
-            $" Название: {draft.Title}\n" +
-            $" Срок: {(draft.DueDate.HasValue ? draft.DueDate.Value.ToString("f") : "не указан")}\n\n" +
-            $"Исполнитель: {draft.AssignedTo ?? "не указан"}\n" +
-            $"Изменить или сохранить?";
+            $"Task draft\n" +
+            $"Title: {draft.Title}\n" +
+            $"Due date: {(draft.DueDate.HasValue ? draft.DueDate.Value.ToString("f") : "not specified")}\n\n" +
+            $"Assignee: {draft.AssignedTo ?? "not specified"}\n" +
+            $"Edit or save?";
 
         await bot.SendTextMessageAsync(
             chatId,
@@ -149,8 +149,8 @@ public class TelegramBotService
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("✅ Оставить как есть", "confirm_draft"),
-                    InlineKeyboardButton.WithCallbackData("✏️ Изменить", $"edit_draft:{draft.Id}")
+                    InlineKeyboardButton.WithCallbackData("✅ Keep as is", "confirm_draft"),
+                    InlineKeyboardButton.WithCallbackData("✏️ Edit", $"edit_draft:{draft.Id}")
                 }
             }),
             cancellationToken: token
@@ -167,10 +167,10 @@ public class TelegramBotService
             case "/help":
                 await bot.SendTextMessageAsync(
                     chatId: message.Chat.Id,
-                    text: " Доступные команды:\n" +
-                          "/list – показать все задачи\n" +
-                          "/today – задачи на сегодня\n" +
-                          "/help – справка",
+                    text: " Available commands:\n" +
+                          "/list – show all tasks\n" +
+                          "/today – tasks for today\n" +
+                          "/help – help",
                     cancellationToken: token
                 );
                 break;
@@ -183,8 +183,8 @@ public class TelegramBotService
 
                 var messageText = tasks.Any()
                     ? string.Join("\n\n", tasks.Select(t =>
-                        $"{t.Title}\n До:{t.DueDate:d}"))
-                    : "Пока нет задач.";
+                        $"{t.Title}\n Until:{t.DueDate:d}"))
+                    : "No tasks yet.";
                 await bot.SendTextMessageAsync(
                     chatId: message.Chat.Id,
                     text: messageText,
@@ -200,8 +200,8 @@ public class TelegramBotService
 
                 var messageText = tasks.Any()
                     ? string.Join("\n\n", tasks.Select(t =>
-                        $"{t.Title}\n До:{t.DueDate:d}"))
-                    : "На сегодня нет задач.";
+                        $"{t.Title}\n Until:{t.DueDate:d}"))
+                    : "No tasks for today.";
                 await bot.SendTextMessageAsync(
                     chatId: message.Chat.Id,
                     text: messageText,
@@ -212,7 +212,7 @@ public class TelegramBotService
             default:
                 await bot.SendTextMessageAsync(
                     chatId: message.Chat.Id,
-                    text: " Неизвестная команда. Напиши /help",
+                    text: " Unknown command. Type /help",
                     cancellationToken: token
                 );
                 break;
@@ -231,13 +231,13 @@ public class TelegramBotService
             {
                 Title =  draft.Title,
                 Description = draft.RawText,
-                AssignedTo = draft.AssignedTo ?? "не указан",
+                AssignedTo = draft.AssignedTo ?? "not specified",
                 DueDate =  draft.DueDate!.Value.ToUniversalTime(),
                 IsConfirmed = true
             });
             drafts.RemoveDraft(draft.ChatId);
 
-            await bot.SendTextMessageAsync(callback.Message.Chat.Id, "Задача сохранена", cancellationToken: token);
+            await bot.SendTextMessageAsync(callback.Message.Chat.Id, "Task has been saved", cancellationToken: token);
         }
         else if (callback.Data.StartsWith("edit_draft:"))
         {
@@ -249,12 +249,12 @@ public class TelegramBotService
 
                 await bot.SendTextMessageAsync(
                     callback.Message.Chat.Id,
-                    "Что хотите изменить?",
+                    "What would you like to edit?",
                     replyMarkup: new InlineKeyboardMarkup(new[]
                     {
-                        new[] { InlineKeyboardButton.WithCallbackData("✏️ Название", $"edit_title:{draftId}") },
-                        new[] { InlineKeyboardButton.WithCallbackData("📅 Срок", $"edit_due:{draftId}") },
-                        new[] { InlineKeyboardButton.WithCallbackData("👤 Исполнитель", $"edit_assigned:{draftId}") },
+                        new[] { InlineKeyboardButton.WithCallbackData("✏️ Title", $"edit_title:{draftId}") },
+                        new[] { InlineKeyboardButton.WithCallbackData("📅 Due Date", $"edit_due:{draftId}") },
+                        new[] { InlineKeyboardButton.WithCallbackData("👤 Assignee", $"edit_assigned:{draftId}") },
                     }),
                     cancellationToken: token
                 );
@@ -280,10 +280,10 @@ public class TelegramBotService
 
                 var prompt = field switch
                 {
-                    EditField.Title => "Введите новое название задачи:",
-                    EditField.DueDate => "Введите новую дату и время (например, 2025-08-01 14:00):",
-                    EditField.AssignedTo => "Введите нового исполнителя:",
-                    _ => "Введите значение:"
+                    EditField.Title => "Enter a new task title:",
+                    EditField.DueDate => "Enter a new date and time (e.g. 2025-08-01 14:00):",
+                    EditField.AssignedTo => "Enter a new assignee:",
+                    _ => "Enter a value:"
                 };
 
                 await bot.SendTextMessageAsync(callback.Message.Chat.Id, prompt, cancellationToken: token);
@@ -301,14 +301,14 @@ public class TelegramBotService
 
         if (session == null)
         {
-            await _botClient.SendTextMessageAsync(message.Chat.Id, "Состояние редактирования не найдено.");
+            await _botClient.SendTextMessageAsync(message.Chat.Id, "Edit state not found.");
             return;
         }
 
-        var draft = drafts.GetDraftById(session.DraftId); // Добавим этот метод ниже
+        var draft = drafts.GetDraftById(session.DraftId); 
         if (draft == null)
         {
-            await _botClient.SendTextMessageAsync(message.Chat.Id, "Черновик не найден.");
+            await _botClient.SendTextMessageAsync(message.Chat.Id, "Draft not found.");
             return;
         }
 
@@ -322,7 +322,7 @@ public class TelegramBotService
                     draft.DueDate = dueDate.ToUniversalTime();
                 else
                 {
-                    await _botClient.SendTextMessageAsync(message.Chat.Id, "Неверный формат даты. Пример: 2025-08-01 14:00");
+                    await _botClient.SendTextMessageAsync(message.Chat.Id, "Invalid date format. Example: 2025-08-01 14:00");
                     return;
                 }
                 break;
@@ -335,19 +335,19 @@ public class TelegramBotService
 
         await _botClient.SendTextMessageAsync(
             message.Chat.Id,
-            "Поле обновлено. Черновик:\n" +
-            $"Название: {draft.Title}\n" +
-            $"Срок: {(draft.DueDate.HasValue ? draft.DueDate.Value.ToString("f") : "не указан")}\n" +
-            $"Исполнитель: {draft.AssignedTo ?? "не указан"}\n\n" +
-            "Изменить что-то ещё или сохранить?",
+            "Field updated. Draft:\n" +
+            $"Title: {draft.Title}\n" +
+            $"Due date: {(draft.DueDate.HasValue ? draft.DueDate.Value.ToString("f") : "not specified")}\n" +
+            $"Assignee: {draft.AssignedTo ?? "not specified"}\n\n" +
+            "Edit or save?",
             replyMarkup: new InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
-                    InlineKeyboardButton.WithCallbackData("✅ Сохранить", $"confirm_draft:{draft.Id}"),
-                    InlineKeyboardButton.WithCallbackData("✏️ Изменить название", $"edit_title:{draft.Id}"),
-                    InlineKeyboardButton.WithCallbackData("📅 Изменить срок", $"edit_due:{draft.Id}"),
-                    InlineKeyboardButton.WithCallbackData("👤 Изменить исполнителя", $"edit_assigned:{draft.Id}")
+                    InlineKeyboardButton.WithCallbackData("✅ Save", $"confirm_draft:{draft.Id}"),
+                    InlineKeyboardButton.WithCallbackData("✏️ Edit title", $"edit_title:{draft.Id}"),
+                    InlineKeyboardButton.WithCallbackData("📅 Edit due date", $"edit_due:{draft.Id}"),
+                    InlineKeyboardButton.WithCallbackData("👤 Change assignee", $"edit_assigned:{draft.Id}")
                 }
             }));
     }

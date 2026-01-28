@@ -24,11 +24,11 @@ public class WhisperService
         await audioStream.CopyToAsync(memoryStream);
         var audioBytes = memoryStream.ToArray();
 
-        Console.WriteLine($"Получено аудио. Размер: {audioBytes.Length} байт");
+        Console.WriteLine($"Audio received. Size: {audioBytes.Length} bytes");
         if (audioBytes.Length == 0)
         {
-            Console.WriteLine("Ошибка: пустой аудиофайл");
-            return "[не удалось распознать]";
+            Console.WriteLine("Error: empty audio file");
+            return "[failed to transcribe]";
         }
 
         var transcriptionRequest = new AudioCreateTranscriptionRequest
@@ -36,18 +36,18 @@ public class WhisperService
             FileName = "voice.ogg",
             File = audioBytes,
             Model = "whisper-1",
-            Language = "ru",
+            Language = "en",
             ResponseFormat = "json"
         };
 
         var response = await _openAi.Audio.CreateTranscription(transcriptionRequest);
         if (!response.Successful)
         {
-            Console.WriteLine("Ошибка Whisper:");
+            Console.WriteLine("Error Whisper:");
             Console.WriteLine(response.Error?.Message);
             Console.WriteLine(response.Error?.Code);
         }
 
-        return response.Successful ? response.Text : "[не удалось распознать]";
+        return response.Successful ? response.Text : "[failed to transcribe]";
     }
 }
