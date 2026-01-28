@@ -1,5 +1,6 @@
 using FastNotes.Api.Data;
 using FastNotes.Api.Infrastructure;
+using FastNotes.Api.Infrastructure.Bot;
 using FastNotes.Api.Services;
 using FastNotes.Shared;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,8 @@ builder.Services.Configure<DatabaseSettings>(
 
 builder.Services.Configure<OpenAISettings>(
     builder.Configuration.GetSection("OpenAI"));
+builder.Services.Configure<TelegramBotSettings>(
+    builder.Configuration.GetSection("TelegramBot"));
 
 
 builder.Services.AddControllers();

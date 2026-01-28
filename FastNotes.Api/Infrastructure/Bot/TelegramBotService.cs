@@ -16,14 +16,22 @@ public class TelegramBotService
 {
     private readonly ITelegramBotClient _botClient;
     private readonly IServiceProvider _services;
-    private readonly string _token;
+    private readonly  string _token;
 
-    public TelegramBotService(IOptions<DatabaseSettings> options, IServiceProvider services)
+    public TelegramBotService(
+        IOptions<TelegramBotSettings> options,
+        IServiceProvider services)
     {
         _services = services;
-        _token = options.Value.ProtectionKeysConnectionString;
+
+        _token = options.Value.Token;
+
+        if (string.IsNullOrWhiteSpace(_token))
+            throw new InvalidOperationException("Telegram bot token is missing");
+
         _botClient = new TelegramBotClient(_token);
     }
+
 
     public void Start()
     {
@@ -224,7 +232,7 @@ public class TelegramBotService
                 Title =  draft.Title,
                 Description = draft.RawText,
                 AssignedTo = draft.AssignedTo ?? "не указан",
-                DueDate =  draft.DueDate,
+                DueDate =  draft.DueDate!.Value.ToUniversalTime(),
                 IsConfirmed = true
             });
             drafts.RemoveDraft(draft.ChatId);
@@ -311,7 +319,7 @@ public class TelegramBotService
                 break;
             case EditField.DueDate:
                 if (DateTime.TryParse(message.Text, out var dueDate))
-                    draft.DueDate = dueDate;
+                    draft.DueDate = dueDate.ToUniversalTime();
                 else
                 {
                     await _botClient.SendTextMessageAsync(message.Chat.Id, "Неверный формат даты. Пример: 2025-08-01 14:00");

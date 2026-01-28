@@ -13,7 +13,7 @@ public static class VoiceParser
     public static (string title, DateTime? dueDate, string? assignedTo) Parse(string input)
     {
         var lowered = input.ToLower();
-        DateTime now = DateTime.Now;
+        DateTime now = DateTime.UtcNow;
         DateTime? dueDate = null;
         string? assignedTo = null;
 
@@ -90,7 +90,11 @@ public static class VoiceParser
             assignedTo = Capitalize(matchComma.Groups[1].Value);
 
         // 3. "исполнитель: Анна", "ответственный: Максим"
-        var matchExplicit = Regex.Match(lowered, @"(исполнитель|ответственный):\s*([а-яА-Яa-zA-ZёЁ]+)");
+        var matchExplicit = Regex.Match(
+            lowered,
+            @"(исполнитель|ответственный)\s*[:\-]?\s*([а-яa-zё]+)",
+            RegexOptions.IgnoreCase
+        );
         if (matchExplicit.Success)
             assignedTo = Capitalize(matchExplicit.Groups[2].Value);
 

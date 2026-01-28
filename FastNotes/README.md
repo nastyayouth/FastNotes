@@ -6,6 +6,6 @@
 
 - .NET 8 (ASP.NET Core Web API)
 - PostgreSQL + EF Core
-- React + Vite + Tailwind
+- React + Vite (frontend)
 - Telegram.Bot API v22
 - Whisper (распознавание речи)
