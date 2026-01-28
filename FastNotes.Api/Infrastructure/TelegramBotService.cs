@@ -32,7 +32,7 @@ public class TelegramBotService
             cancellationToken: cts.Token
         );
 
-        Console.WriteLine("TelegramBot запущен");
+        Console.WriteLine("TelegramBot started");
     }
 
     private async Task HandleUpdateAsync(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
@@ -54,7 +54,7 @@ public class TelegramBotService
         using var scope = _services.CreateScope();
         var taskProcessor = scope.ServiceProvider.GetRequiredService<TelegramTaskProcessor>();
 
-        string recognizedText = "[распознанный текст из голосового]";
+        string recognizedText = "[recognized text from voice message]";
         
 
         var task = await taskProcessor.CreateTaskFromTextAsync(recognizedText,
@@ -62,7 +62,7 @@ public class TelegramBotService
 
         await bot.SendTextMessageAsync(
             message.Chat.Id,
-            $"✅ Задача сохранена: {task.Title}",
+            $"✅ Task saved: {task.Title}",
             cancellationToken: cancellationToken
         );
     }

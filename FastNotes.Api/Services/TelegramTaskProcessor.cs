@@ -16,7 +16,7 @@ public class TelegramTaskProcessor
     {
         var task = new TaskItem
         {
-            Title = $"Голосовая заметка от @{username}",
+            Title = $"Voice note from @{username}",
             Description = text,
             AssignedTo = username,
             DueDate = DateTime.UtcNow.AddDays(1),

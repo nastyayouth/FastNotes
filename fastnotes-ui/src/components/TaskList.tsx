@@ -14,18 +14,18 @@ export const TaskList = () => {
         });
     }, []);
 
-    if (loading) return <p className="text-gray-500">Загрузка...</p>;
+    if (loading) return <p className="text-gray-500">Loading...</p>;
 
     return (
         <div className="p-4">
-            <h2 className="text-xl font-semibold mb-4">Список задач</h2>
+            <h2 className="text-xl font-semibold mb-4">Task list</h2>
             <ul className="space-y-3">
                 {tasks.map(task => (
                     <li key={task.id} className="border rounded p-3 shadow-sm">
                         <div className="font-bold">{task.title}</div>
                         <div>{task.description}</div>
                         <div className="text-sm text-gray-600">
-                            До: {new Date(task.dueDate).toLocaleDateString()} — Ответственный: {task.assignedTo}
+                            Due: {new Date(task.dueDate).toLocaleDateString()} — Assignee: {task.assignedTo}
                         </div>
                     </li>
                 ))}
