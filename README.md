@@ -1,7 +1,13 @@
 ## 🎬 Live Demo
+> Web app to view and manage tasks
 
-![FastNotes demo](docs/demo_bot.gif)
-![FastNotes demo](docs/demo_ui.gif)
+<img src="docs/demo_ui.gif" width="900" alt="FastNotes demo" />
+
+> Voice-first task manager powered by Telegram and AI
+
+<p align="center">
+<img src="docs/demo_bot.gif" width="30%" alt="FastNotes demo" />
+</p>
 
 
 ## Quick Start (2 minutes)
