@@ -25,6 +25,7 @@ FastNotes.Shared/      # Shared contracts (DTOs)
 FastNotes.Tests/       # Unit tests
 docker/                # Dockerfiles + docker-compose
 ```
+See [docs/architecture.md](docs/architecture.md) for C4 and sequence diagrams.
 
 ### Request Flow (happy path)
 1. User sends a voice message to the Telegram bot.
