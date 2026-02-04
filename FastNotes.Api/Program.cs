@@ -1,5 +1,5 @@
+using System.Text;
 using FastNotes.Api.Data;
-using FastNotes.Api.Infrastructure;
 using FastNotes.Api.Infrastructure.Bot;
 using FastNotes.Api.Services;
 using FastNotes.Shared;
@@ -7,6 +7,9 @@ using Microsoft.EntityFrameworkCore;
 using FastNotes.Api.Infrastructure.Config;
 using FastNotes.Api.Infrastructure.Whisper;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,11 +26,71 @@ builder.Services.Configure<OpenAISettings>(
     builder.Configuration.GetSection("OpenAI"));
 builder.Services.Configure<TelegramBotSettings>(
     builder.Configuration.GetSection("TelegramBot"));
+builder.Services.Configure<JwtSettings>(
+    builder.Configuration.GetSection("Jwt"));
+
+var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+if (string.IsNullOrWhiteSpace(jwtSettings.SigningKey))
+{
+    throw new InvalidOperationException("JWT signing key is missing. Set Jwt:SigningKey in configuration.");
+}
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidAudience = jwtSettings.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SigningKey)),
+            ClockSkew = TimeSpan.FromMinutes(2)
+        };
+        options.RequireHttpsMetadata = false;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("TasksRead", policy =>
+        policy.RequireClaim("scope", "tasks.read"));
+    options.AddPolicy("TasksWrite", policy =>
+        policy.RequireClaim("scope", "tasks.write"));
+});
 
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter JWT token (WITHOUT Bearer)"
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
 
 builder.Services.AddSingleton<TelegramBotService>();
 builder.Services.AddSingleton<DraftService>();
@@ -39,14 +102,32 @@ builder.Services.AddScoped<WhisperService>();
 builder.Services.AddScoped<TaskService>();
 
 
-
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendDev", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173")
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.UseCors("FrontendDev");
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
+
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 

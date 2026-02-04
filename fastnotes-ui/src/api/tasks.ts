@@ -8,13 +8,26 @@ export interface TaskDto {
     dueDate: string;
     isConfirmed: boolean;
 }
+const JWT_KEY = 'fastnotes.jwt';
+const api = axios.create({
+    baseURL:  'http://localhost:5042/api'
+});
+
+api.interceptors.request.use(config => {
+    const token = localStorage.getItem(JWT_KEY);
+    console.log('JWT from storage at tasks.ts:', token);
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
 
 export const getTasks = async (): Promise<TaskDto[]> => {
-    const response = await axios.get('/api/tasks');
+    const response = await api.get('/Tasks');
     return response.data;
 };
 
 export const createTask = async (task: Omit<TaskDto, 'id'>): Promise<TaskDto> => {
-    const response = await axios.post('/api/tasks', task);
+    const response = await api.post('/Tasks', task);
     return response.data;
 };

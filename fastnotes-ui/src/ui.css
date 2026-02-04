@@ -86,3 +86,109 @@ ul {
 .ui-icon--accent {
     color: var(--color-accent);
 }
+
+
+/* =========================
+   Token auth panel
+   ========================= */
+
+.token-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+}
+
+.token-panel__title {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.token-panel__hint {
+    margin-top: var(--space-xs);
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.token-form {
+    margin-top: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.token-input {
+    min-height: 120px;
+    resize: vertical;
+
+    background: rgba(0,0,0,0.2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+
+    font-size: 13px;
+    font-family: monospace;
+    color: var(--color-text-primary);
+}
+
+.token-input::placeholder {
+    color: var(--color-text-secondary);
+}
+
+.token-save-button {
+    align-self: flex-start;
+
+    background: var(--color-accent);
+    color: white;
+
+    border-radius: var(--radius-md);
+    padding: 6px 14px;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.token-save-button:hover {
+    opacity: 0.9;
+}
+
+/* =========================
+   Token state (authenticated)
+   ========================= */
+
+.token-state {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.token-state__info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+
+    padding: var(--space-sm) var(--space-md);
+
+    font-size: 13px;
+    color: var(--color-text-disabled);
+}
+
+.token-clear-button {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+
+    padding: 4px 10px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+
+    color: var(--color-text-secondary);
+}
+
+.token-clear-button:hover {
+    border-color: var(--color-text-secondary);
+}

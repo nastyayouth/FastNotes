@@ -1,9 +1,11 @@
 using FastNotes.Api.Services;
 using FastNotes.Shared;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FastNotes.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
@@ -16,6 +18,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Policy = "TasksRead")]
     public async Task<IActionResult> GetAll()
     {
         var tasks = await _service.GetAllAsync();
@@ -23,6 +26,7 @@ public class TasksController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "TasksWrite")]
     public async Task<IActionResult> Create(TaskDto task)
     {
         var created = await _service.CreateAsync(task);
