@@ -5,11 +5,14 @@ using FastNotes.Api.Services;
 using FastNotes.Shared;
 using Microsoft.EntityFrameworkCore;
 using FastNotes.Api.Infrastructure.Config;
+using FastNotes.Api.Infrastructure.Middleware;
 using FastNotes.Api.Infrastructure.Whisper;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,6 +51,39 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.SigningKey)),
             ClockSkew = TimeSpan.FromMinutes(2)
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/problem+json";
+
+                var problem = new ProblemDetails
+                {
+                    Status = 401,
+                    Title = "Unauthorized",
+                    Detail = "Authentication is required."
+                };
+
+                return context.Response.WriteAsJsonAsync(problem);
+            },
+            OnForbidden = context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/problem+json";
+
+                var problem = new ProblemDetails
+                {
+                    Status = 403,
+                    Title = "Forbidden",
+                    Detail = "You do not have permission to access this resource."
+                };
+
+                return context.Response.WriteAsJsonAsync(problem);
+            }
         };
         options.RequireHttpsMetadata = false;
     });
@@ -125,8 +161,7 @@ else
 {
     app.UseHttpsRedirection();
 }
-
-
+app.UseGlobalExceptionHandling();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
