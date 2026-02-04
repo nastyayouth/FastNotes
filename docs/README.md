@@ -86,8 +86,8 @@ npm run dev
 - CI pipeline for tests
 
 ## Demo
-<img src="docs/demo_ui.gif" width="900" alt="FastNotes demo UI" />
+<img src="demo_ui.gif" width="900" alt="FastNotes demo UI" />
 
 <p align="center">
-<img src="docs/demo_bot.gif" width="30%" alt="FastNotes demo bot" />
+<img src="demo_bot.gif" width="30%" alt="FastNotes demo bot" />
 </p>
