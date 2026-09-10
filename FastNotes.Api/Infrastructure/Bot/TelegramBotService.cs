@@ -16,15 +16,17 @@ public class TelegramBotService
 {
     private readonly ITelegramBotClient _botClient;
     private readonly IServiceProvider _services;
+    private readonly IHttpClientFactory _httpClientFactory;
     private readonly  string _token;
 
     public TelegramBotService(
         IOptions<TelegramBotSettings> options,
-        IServiceProvider services)
+        IServiceProvider services,
+        IHttpClientFactory httpClientFactory)
     {
         _services = services;
-
         _token = options.Value.Token;
+        _httpClientFactory = httpClientFactory;
 
         if (string.IsNullOrWhiteSpace(_token))
             throw new InvalidOperationException("Telegram bot token is missing");
@@ -98,7 +100,7 @@ public class TelegramBotService
         var stream = new MemoryStream();
         var url = $"https://api.telegram.org/file/bot{_token}/{file.FilePath}";
 
-        using var http = new HttpClient();
+        var http = _httpClientFactory.CreateClient();
         using var voiceStream = await http.GetStreamAsync(url, token);
         await voiceStream.CopyToAsync(stream, token);
         stream.Position = 0;
