@@ -99,6 +99,12 @@ npm run dev
 - More advanced filtering/search
 - CI pipeline for tests
 
+## Additional Links
+OpenAI ApiKey:
+```
+https://platform.openai.com/api-keys
+```
+
 ## Demo
 <img src="demo_ui.gif" width="900" alt="FastNotes demo UI" />
 
