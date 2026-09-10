@@ -57,6 +57,13 @@ Then update:
 ```
 docker compose -f docker/docker-compose.yml up --build
 ```
+Docker will automatically download the required base images on the first run and reuse them on subsequent runs.
+If Docker cannot download a base image because of a temporary registry or network issue, you can pull it manually and retry:
+```
+docker pull mcr.microsoft.com/dotnet/sdk:8.0
+docker compose -f docker/docker-compose.yml up --build
+```
+
 Then open:
 - UI: http://localhost:3000
 - API: http://localhost:5000/swagger
