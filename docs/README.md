@@ -57,6 +57,13 @@ Then update:
 ```
 docker compose -f docker/docker-compose.yml up --build
 ```
+
+Build ui or api separately 
+```
+docker compose -f docker/docker-compose.yml build ui
+docker compose -f docker/docker-compose.yml up --build api
+```
+
 Docker will automatically download the required base images on the first run and reuse them on subsequent runs.
 If Docker cannot download a base image because of a temporary registry or network issue, you can pull it manually and retry:
 ```
@@ -91,6 +98,12 @@ npm run dev
 - Background queue for transcription
 - More advanced filtering/search
 - CI pipeline for tests
+
+## Additional Links
+OpenAI ApiKey:
+```
+https://platform.openai.com/api-keys
+```
 
 ## Demo
 <img src="demo_ui.gif" width="900" alt="FastNotes demo UI" />
