@@ -57,6 +57,13 @@ Then update:
 ```
 docker compose -f docker/docker-compose.yml up --build
 ```
+
+Build ui or api separately 
+```
+docker compose -f docker/docker-compose.yml build ui
+docker compose -f docker/docker-compose.yml up --build api
+```
+
 Docker will automatically download the required base images on the first run and reuse them on subsequent runs.
 If Docker cannot download a base image because of a temporary registry or network issue, you can pull it manually and retry:
 ```
