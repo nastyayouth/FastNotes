@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { api } from './client';
 
 export interface TaskDto {
     id: number;
@@ -9,9 +9,6 @@ export interface TaskDto {
     isConfirmed: boolean;
 }
 const JWT_KEY = 'fastnotes.jwt';
-const api = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api'
-});
 
 api.interceptors.request.use(config => {
     const token = localStorage.getItem(JWT_KEY);

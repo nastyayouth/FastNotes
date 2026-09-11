@@ -1,0 +1,14 @@
+.git
+.idea
+.vs
+
+**/bin/
+**/obj/
+**/node_modules/
+**/dist/
+
+**/*.user
+**/*.suo
+**/*.log
+
+docker/.env

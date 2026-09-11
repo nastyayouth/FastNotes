@@ -1,0 +1,47 @@
+services:
+  db:
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-fastnotesdb}
+      POSTGRES_USER: ${POSTGRES_USER:-fastnotes}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in docker/.env}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-fastnotes} -d ${POSTGRES_DB:-fastnotesdb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      DatabaseSettings__ConnectionString: Host=db;Port=5432;Database=${POSTGRES_DB:-fastnotesdb};Username=${POSTGRES_USER:-fastnotes};Password=${POSTGRES_PASSWORD}
+      Jwt__SigningKey: ${JWT_SIGNING_KEY:?Set JWT_SIGNING_KEY in docker/.env}
+      TelegramBot__Token: ${TELEGRAM_BOT_TOKEN:?Set TELEGRAM_BOT_TOKEN in docker/.env}
+      OpenAI__ApiKey: ${OPENAI_API_KEY:?Set OPENAI_API_KEY in docker/.env}
+
+  ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    ports:
+      - "${FASTNOTES_PORT:-3000}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
