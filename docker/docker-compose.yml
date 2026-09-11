@@ -45,6 +45,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+      
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --config /etc/cloudflared/config.yml run
+    volumes:
+      - ${USERPROFILE}/.cloudflared:/etc/cloudflared:ro
+    depends_on:
+      - ui
 
 volumes:
   postgres_data:
