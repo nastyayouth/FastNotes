@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#0B1F3A"/>
+
+  <!-- Note -->
+  <path d="M20 14h22l8 8v28H20z" fill="#F7FBFF"/>
+  <path d="M42 14v10h10" fill="#22C7F2"/>
+
+  <!-- Note lines -->
+  <rect x="31" y="29" width="14" height="3" rx="1.5" fill="#0B1F3A"/>
+  <rect x="31" y="36" width="11" height="3" rx="1.5" fill="#0B1F3A"/>
+
+  <!-- Lightning / fast -->
+  <path d="M24 23 13 38h9l-4 13 14-18h-9z" fill="#22C7F2"/>
+</svg>
