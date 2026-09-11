@@ -1,8 +1,8 @@
 import type { TaskDto } from '../api/tasks';
 import '../ui.css';
 
-import CalendarIcon from '../../public/ui/icons/calendar.svg?react';
-import UserIcon from '../../public/ui/icons/user.svg?react';
+import CalendarIcon from '../../src/assets/icons/calendar.svg?react';
+import UserIcon from '../../src/assets/icons/user.svg?react';
 
 
 type Props = {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { getTasks } from '../api/tasks';
 import type { TaskDto } from '../api/tasks';
 import { TaskCard } from './TaskCard';
-import SparkleIcon from '../../public/ui/icons/sparkle.svg?react';
+import SparkleIcon from '../assets/icons/sparkle.svg?react';
 
 type DateFilter = 'all' | 'today' | 'tomorrow' | 'week' | 'month';
 const FILTERS: { key: DateFilter; label: string }[] = [
