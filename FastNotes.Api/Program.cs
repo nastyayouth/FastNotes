@@ -152,6 +152,14 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    await db.Database.MigrateAsync();
+}
+
 app.UseCors("FrontendDev");
 if (app.Environment.IsDevelopment())
 {
@@ -160,7 +168,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseHttpsRedirection();
+    app.UseHttpsRedirection(); //help bot to work 
 }
 app.UseGlobalExceptionHandling();
 app.UseAuthentication();
