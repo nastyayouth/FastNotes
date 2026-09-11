@@ -1,19 +1,25 @@
-# Use SDK image for build
+# Build the ASP.NET Core application
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 COPY FastNotes.Api/*.csproj FastNotes.Api/
 COPY FastNotes.Shared/*.csproj FastNotes.Shared/
-
 RUN dotnet restore FastNotes.Api/FastNotes.Api.csproj
 
 COPY . .
 WORKDIR /src/FastNotes.Api
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app/publish --no-restore
 
-# Use runtime image
+# Run the published application
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /app/publish .
+EXPOSE 8080
+HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=5 \
+    CMD curl --fail --silent http://localhost:8080/health || exit 1
 
 ENTRYPOINT ["dotnet", "FastNotes.Api.dll"]

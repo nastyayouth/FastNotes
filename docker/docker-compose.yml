@@ -1,32 +1,7 @@
-version: '3.8'
-
 services:
-  api:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.api
-    ports:
-      - "5000:8080"
-    depends_on:
-      - db
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - DatabaseSettings__ConnectionString=Host=db;Port=5432;Database=fastnotesdb;Username=postgres;Password=postgres
-
-  ui:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.ui
-      args:
-        VITE_API_BASE_URL: http://localhost:5000/api
-    ports:
-      - "3000:80"
-    depends_on:
-      - api
-
   db:
     image: postgres:15
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: fastnotesdb
       POSTGRES_USER: postgres
@@ -35,6 +10,39 @@ services:
       - "5434:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d fastnotesdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.api
+    restart: unless-stopped
+    ports:
+      - "5000:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      DatabaseSettings__ConnectionString: Host=db;Port=5432;Database=fastnotesdb;Username=postgres;Password=postgres
+
+  ui:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.ui
+      args:
+        VITE_API_BASE_URL: /api
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:

@@ -11,11 +11,9 @@ using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
@@ -96,7 +94,6 @@ builder.Services.AddAuthorization(options =>
         policy.RequireClaim("scope", "tasks.write"));
 });
 
-
 builder.Services.AddControllers();
 builder.Services.AddHttpClient();
 builder.Services.AddEndpointsApiExplorer();
@@ -128,7 +125,6 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-
 builder.Services.AddSingleton<TelegramBotService>();
 builder.Services.AddSingleton<DraftService>();
 builder.Services.AddSingleton<EditStateService>();
@@ -137,7 +133,6 @@ builder.Services.AddScoped<TelegramTaskProcessor>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<WhisperService>();
 builder.Services.AddScoped<TaskService>();
-
 
 builder.Services.AddCors(options =>
 {
@@ -152,27 +147,37 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
     await db.Database.MigrateAsync();
 }
 
-app.UseCors("FrontendDev");
 if (app.Environment.IsDevelopment())
 {
+    app.UseCors("FrontendDev");
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-else
-{
-    app.UseHttpsRedirection(); //help bot to work 
-}
+
 app.UseGlobalExceptionHandling();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapGet("/health", async (AppDbContext db, CancellationToken cancellationToken) =>
+{
+    try
+    {
+        return await db.Database.CanConnectAsync(cancellationToken)
+            ? Results.Ok(new { status = "healthy" })
+            : Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+    catch
+    {
+        return Results.StatusCode(StatusCodes.Status503ServiceUnavailable);
+    }
+}).AllowAnonymous();
+
 app.MapControllers();
 
 var bot = app.Services.GetRequiredService<TelegramBotService>();
