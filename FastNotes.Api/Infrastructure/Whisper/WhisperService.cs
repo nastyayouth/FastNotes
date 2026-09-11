@@ -48,6 +48,6 @@ public class WhisperService
             Console.WriteLine(response.Error?.Code);
         }
 
-        return response.Successful ? response.Text : "[failed to transcribe]";
+        return response.Successful ? response.Text : $"[failed to transcribe: {response.Error?.Code} - {response.Error?.Message}]";
     }
 }
