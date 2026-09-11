@@ -72,16 +72,19 @@ public class HealthController : ControllerBase
     {
         try
         {
-            var canConnect =
-                await _dbContext.Database.CanConnectAsync(cancellationToken);
+            await _dbContext.Database.OpenConnectionAsync(cancellationToken);
 
-            return canConnect
-                ? ServiceHealth.Healthy()
-                : ServiceHealth.Unhealthy("Cannot connect to database.");
+            return ServiceHealth.Healthy();
         }
         catch (Exception ex)
         {
-            return ServiceHealth.Unhealthy(ex.Message);
+            return ServiceHealth.Unhealthy(
+                $"{ex.GetType().Name}: {ex.Message}"
+            );
+        }
+        finally
+        {
+            await _dbContext.Database.CloseConnectionAsync();
         }
     }
 
