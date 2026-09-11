@@ -75,7 +75,44 @@ Then open:
 - UI: http://localhost:3000
 - API: http://localhost:5000/swagger
 
-### 4) Run locally (without Docker)
+### 4) Expose with Cloudflare Tunnel
+The Docker compose file includes a `tunnel` service that runs `cloudflared` and routes the public domain to the UI container.
+
+Create a local Cloudflare directory outside the repository:
+```
+New-Item -ItemType Directory -Force "$env:USERPROFILE\.cloudflared"
+```
+
+Place the tunnel credentials JSON from Cloudflare in that folder. The file name must match the tunnel ID, for example:
+```
+C:\Users\<you>\.cloudflared\<tunnel-id>.json
+```
+
+Create `C:\Users\<you>\.cloudflared\config.yml`:
+```yaml
+tunnel: <tunnel-id>
+credentials-file: /etc/cloudflared/<tunnel-id>.json
+
+ingress:
+  - hostname: fastnotes.adorofeeva.com
+    service: http://ui:80
+
+  - service: http_status:404
+```
+
+Start the stack:
+```
+docker compose -f docker/docker-compose.yml up -d
+```
+
+Check tunnel logs:
+```
+docker compose -f docker/docker-compose.yml logs --tail=80 tunnel
+```
+
+The domain should then route to the UI through the Docker network. Do not start a second local `cloudflared tunnel --url ...` process when using the Docker `tunnel` service.
+
+### 5) Run locally (without Docker)
 Start Postgres, then run:
 ```
 dotnet run --project FastNotes.Api
