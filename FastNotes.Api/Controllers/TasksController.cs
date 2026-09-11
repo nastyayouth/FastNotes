@@ -22,7 +22,22 @@ public class TasksController : ControllerBase
     public async Task<IActionResult> GetAll()
     {
         var tasks = await _service.GetAllAsync();
+        if (tasks == null)
+        {
+            return StatusCode(
+                StatusCodes.Status500InternalServerError,
+                "Failed to load tasks."
+            );
+        }
+
+        if (!tasks.Any())
+        {
+            return NotFound();
+        }
+        
+
         return Ok(tasks);
+
     }
 
     [HttpPost]
