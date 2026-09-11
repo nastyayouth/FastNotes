@@ -10,7 +10,7 @@ export interface TaskDto {
 }
 const JWT_KEY = 'fastnotes.jwt';
 const api = axios.create({
-    baseURL:  'http://localhost:5042/api'
+    baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api'
 });
 
 api.interceptors.request.use(config => {

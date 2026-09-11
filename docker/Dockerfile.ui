@@ -2,11 +2,15 @@
 FROM node:20 AS build
 WORKDIR /app
 
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 COPY fastnotes-ui/package*.json ./
 RUN npm install
 
 COPY fastnotes-ui ./
 RUN npm run build
+
 
 # Server for static content (e.g., nginx)
 FROM nginx:alpine
